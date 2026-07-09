@@ -35,9 +35,15 @@ TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 def _get_ffmpeg() -> str:
     """Return the path to an ffmpeg executable."""
+    # 0. Check local project root (e.g. Render custom download)
+    local_ffmpeg = Path(__file__).resolve().parent.parent / "ffmpeg"
+    if local_ffmpeg.is_file() and os.access(local_ffmpeg, os.X_OK):
+        return str(local_ffmpeg)
+
     # 1. System ffmpeg (local dev / servers with ffmpeg installed)
     if shutil.which("ffmpeg"):
         return "ffmpeg"
+
     # 2. static-ffmpeg package (Vercel serverless)
     try:
         import static_ffmpeg
@@ -49,6 +55,7 @@ def _get_ffmpeg() -> str:
     raise RuntimeError(
         "FFmpeg not found. Install it on your system or add 'static-ffmpeg' to requirements.txt."
     )
+
 
 
 
