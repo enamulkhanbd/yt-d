@@ -8,10 +8,18 @@ pip install -r requirements.txt
 
 # Download and install ffmpeg binary in the build environment
 echo "Downloading FFmpeg..."
-mkdir -p bin
 curl -L https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz -o ffmpeg.tar.xz
-tar -xf ffmpeg.tar.xz --strip-components=1
-mv bin/ffmpeg bin/ffprobe .
-rm -rf ffmpeg-master-* ffmpeg.tar.xz
+
+echo "Extracting FFmpeg..."
+mkdir -p ffmpeg_temp
+tar -xf ffmpeg.tar.xz -C ffmpeg_temp --strip-components=1
+
+echo "Moving binaries..."
+mv ffmpeg_temp/bin/ffmpeg ./ffmpeg
+mv ffmpeg_temp/bin/ffprobe ./ffprobe
+
+echo "Cleaning up..."
+rm -rf ffmpeg_temp ffmpeg.tar.xz
+
 chmod +x ffmpeg ffprobe
 echo "FFmpeg installed successfully!"
