@@ -33,10 +33,6 @@ else:
 TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ---------------------------------------------------------------------------
-# FFmpeg resolution
-# ---------------------------------------------------------------------------
-
 def _get_ffmpeg() -> str:
     """Return the path to an ffmpeg executable."""
     # 1. System ffmpeg (local dev / servers with ffmpeg installed)
@@ -54,8 +50,6 @@ def _get_ffmpeg() -> str:
         "FFmpeg not found. Install it on your system or add 'static-ffmpeg' to requirements.txt."
     )
 
-
-FFMPEG_BIN = _get_ffmpeg()
 
 
 # ---------------------------------------------------------------------------
@@ -239,7 +233,7 @@ async def download_video(request: Request, background_tasks: BackgroundTasks):
 
     if needs_slice:
         sliced_path = TEMP_DIR / f"{job_id}_sliced.mp4"
-        cmd = [FFMPEG_BIN, "-y"]
+        cmd = [_get_ffmpeg(), "-y"]
 
         if start_sec is not None:
             cmd += ["-ss", _seconds_to_ts(start_sec)]
