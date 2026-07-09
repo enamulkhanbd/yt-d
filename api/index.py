@@ -169,6 +169,12 @@ async def validate_url(request: Request):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["ios", "android", "web"],
+                "skip": ["webpage"]
+            }
+        }
     }
 
     try:
@@ -197,7 +203,17 @@ async def download_video(request: Request, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
     # --- 1. Probe duration for timestamp validation ---
-    ydl_opts_probe = {"quiet": True, "no_warnings": True, "skip_download": True}
+    ydl_opts_probe = {
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["ios", "android", "web"],
+                "skip": ["webpage"]
+            }
+        }
+    }
     try:
         with yt_dlp.YoutubeDL(ydl_opts_probe) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -223,6 +239,12 @@ async def download_video(request: Request, background_tasks: BackgroundTasks):
         "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
         "merge_output_format": "mp4",
         "outtmpl": str(base_path),
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["ios", "android", "web"],
+                "skip": ["webpage"]
+            }
+        }
     }
 
     try:
