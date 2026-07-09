@@ -65,6 +65,17 @@ def _get_ffmpeg() -> str:
 
 app = FastAPI(title="ClipForge")
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
+)
+
 # Serve static files and SPA index (runs locally and in Docker/Hugging Face)
 if not IS_VERCEL:
     from fastapi.staticfiles import StaticFiles

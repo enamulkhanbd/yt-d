@@ -324,10 +324,16 @@
         throw new Error(data.detail || `Download failed (${res.status})`);
       }
 
-      // Extract filename from header or fall back
+      // Extract filename from header or build a safe fallback from video title
       const disposition = res.headers.get("Content-Disposition") || "";
       const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';\n]+)/i);
-      const filename = match ? decodeURIComponent(match[1]) : "clip.mp4";
+      let filename = match ? decodeURIComponent(match[1]) : "";
+      
+      if (!filename) {
+        const rawTitle = $videoTitle.textContent || "clip";
+        const cleanTitle = rawTitle.replace(/[<>:"/\\|?*]/g, "_").trim();
+        filename = `${cleanTitle}.mp4`;
+      }
 
       // Trigger browser download
       const blob = await res.blob();
