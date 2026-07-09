@@ -58,7 +58,7 @@ def _get_ffmpeg() -> str:
 
 app = FastAPI(title="ClipForge")
 
-# Local development: serve static files and the SPA index
+# Serve static files and SPA index (runs locally and in Docker/Hugging Face)
 if not IS_VERCEL:
     from fastapi.staticfiles import StaticFiles
 
@@ -70,6 +70,7 @@ if not IS_VERCEL:
     @app.get("/", response_class=HTMLResponse)
     async def index():
         return (PUBLIC_DIR / "index.html").read_text(encoding="utf-8")
+
 
 
 # ---------------------------------------------------------------------------
