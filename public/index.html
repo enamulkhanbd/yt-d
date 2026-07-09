@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipForge — YouTube Downloader &amp; Slicer</title>
+  <meta name="description" content="Download and slice YouTube videos instantly. Paste a URL, set your timestamps, and get a perfectly trimmed MP4 clip." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: {
+              50: '#ecfeff', 100: '#cffafe', 200: '#a5f3fc', 300: '#67e8f9',
+              400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490',
+              800: '#155e75', 900: '#164e63',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+
+  <!-- Ambient Background Glow -->
+  <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
+    <div class="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-brand-500/[0.04] blur-[120px]"></div>
+    <div class="absolute bottom-[-15%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-500/[0.03] blur-[100px]"></div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="relative max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-20 flex flex-col items-center gap-10">
+
+    <!-- Hero -->
+    <header class="text-center space-y-3 animate-fade-in">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-medium tracking-wide uppercase mb-2">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        ClipForge
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 via-brand-200 to-brand-400 bg-clip-text text-transparent">
+        YouTube Downloader &amp; Slicer
+      </h1>
+      <p class="text-slate-400 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+        Paste a link, pick your timestamps, and download a perfectly trimmed clip&nbsp;— no re&#8209;encoding, instant&nbsp;quality.
+      </p>
+    </header>
+
+    <!-- URL Input Card -->
+    <section id="url-section" class="glass-card w-full p-5 sm:p-6 space-y-4 animate-slide-up">
+      <label for="url-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+        YouTube URL
+      </label>
+      <div class="flex gap-2">
+        <div class="relative flex-1">
+          <input
+            id="url-input"
+            type="url"
+            placeholder="https://www.youtube.com/watch?v=..."
+            autocomplete="off"
+            spellcheck="false"
+            class="input-field w-full pl-10 pr-10"
+          />
+          <!-- Link icon -->
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/><path stroke-linecap="round" stroke-linejoin="round" d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101"/></svg>
+          <!-- Clear button -->
+          <button id="btn-clear" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-slate-700/60 text-slate-500 hover:text-slate-300 transition-colors hidden" title="Clear">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <button id="btn-fetch" class="btn-primary flex-shrink-0">
+          <span class="btn-label">Fetch</span>
+          <svg class="btn-spinner hidden w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+        </button>
+      </div>
+      <p id="url-error" class="text-red-400 text-xs hidden"></p>
+    </section>
+
+    <!-- Video Info Card (hidden until fetch) -->
+    <section id="video-info" class="glass-card w-full overflow-hidden hidden animate-slide-up">
+      <div class="flex flex-col sm:flex-row">
+        <div class="sm:w-48 flex-shrink-0 bg-slate-800/60">
+          <img id="video-thumb" src="" alt="Video thumbnail" class="w-full h-full object-cover aspect-video sm:aspect-auto" />
+        </div>
+        <div class="flex-1 p-4 sm:p-5 space-y-1.5 min-w-0">
+          <h2 id="video-title" class="font-semibold text-sm sm:text-base leading-snug text-slate-100 line-clamp-2"></h2>
+          <p id="video-channel" class="text-xs text-slate-400"></p>
+          <div class="flex items-center gap-1.5 text-xs text-brand-400 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span id="video-duration"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slicer Card (hidden until fetch) -->
+    <section id="slicer-section" class="glass-card w-full p-5 sm:p-6 space-y-5 hidden animate-slide-up">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Trim Clip</h3>
+        <button id="btn-reset-trim" class="text-xs text-brand-400 hover:text-brand-300 transition-colors font-medium">Reset</button>
+      </div>
+
+      <!-- Range Slider -->
+      <div id="range-slider-wrap" class="space-y-2">
+        <div class="relative h-2 rounded-full bg-slate-700/80" id="slider-track">
+          <div id="slider-range" class="absolute h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-400"></div>
+          <input id="slider-start" type="range" min="0" max="100" value="0" step="1" class="range-thumb" />
+          <input id="slider-end" type="range" min="0" max="100" value="100" step="1" class="range-thumb" />
+        </div>
+        <div class="flex justify-between text-[11px] text-slate-500 tabular-nums">
+          <span id="slider-start-label">00:00:00</span>
+          <span id="slider-end-label">00:00:00</span>
+        </div>
+      </div>
+
+      <!-- Time Inputs -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="input-start" class="block text-[11px] font-medium text-slate-500 mb-1">Start Time</label>
+          <input id="input-start" type="text" placeholder="00:00:00" class="input-field w-full text-center tabular-nums text-sm" />
+        </div>
+        <div>
+          <label for="input-end" class="block text-[11px] font-medium text-slate-500 mb-1">End Time</label>
+          <input id="input-end" type="text" placeholder="00:00:00" class="input-field w-full text-center tabular-nums text-sm" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Download Button (hidden until fetch) -->
+    <button id="btn-download" class="btn-download hidden animate-slide-up" disabled>
+      <span class="btn-dl-idle flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Download Clip
+      </span>
+      <span class="btn-dl-busy hidden flex items-center gap-2">
+        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+        Processing…
+      </span>
+      <span class="btn-dl-done hidden flex items-center gap-2 text-emerald-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Done!
+      </span>
+    </button>
+
+    <!-- Download Error -->
+    <p id="download-error" class="text-red-400 text-xs text-center hidden"></p>
+
+    <!-- Footer -->
+    <footer class="text-center text-[11px] text-slate-600 pt-4">
+      Built with FastAPI · yt-dlp · FFmpeg
+    </footer>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
