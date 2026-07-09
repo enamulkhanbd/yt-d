@@ -165,17 +165,34 @@ async def validate_url(request: Request):
     if not url or not _is_valid_youtube_url(url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
+    # Look for cookies in local file or env var
+    cookies_path = None
+    local_cookies = Path(__file__).resolve().parent.parent / "cookies.txt"
+    env_cookies = os.environ.get("YT_COOKIES")
+
+    if local_cookies.is_file():
+        cookies_path = str(local_cookies)
+    elif env_cookies:
+        temp_cookies_file = TEMP_DIR / "temp_cookies.txt"
+        try:
+            temp_cookies_file.write_text(env_cookies.strip(), encoding="utf-8")
+            cookies_path = str(temp_cookies_file)
+        except Exception:
+            pass
+
     ydl_opts = {
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
         "extractor_args": {
             "youtube": {
-                "player_client": ["ios", "android", "web"],
+                "player_client": ["android_embed", "ios", "android", "web", "tv"],
                 "skip": ["webpage"]
             }
         }
     }
+    if cookies_path:
+        ydl_opts["cookiefile"] = cookies_path
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -202,6 +219,21 @@ async def download_video(request: Request, background_tasks: BackgroundTasks):
     if not url or not _is_valid_youtube_url(url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
+    # Look for cookies
+    cookies_path = None
+    local_cookies = Path(__file__).resolve().parent.parent / "cookies.txt"
+    env_cookies = os.environ.get("YT_COOKIES")
+
+    if local_cookies.is_file():
+        cookies_path = str(local_cookies)
+    elif env_cookies:
+        temp_cookies_file = TEMP_DIR / "temp_cookies.txt"
+        try:
+            temp_cookies_file.write_text(env_cookies.strip(), encoding="utf-8")
+            cookies_path = str(temp_cookies_file)
+        except Exception:
+            pass
+
     # --- 1. Probe duration for timestamp validation ---
     ydl_opts_probe = {
         "quiet": True,
@@ -209,11 +241,14 @@ async def download_video(request: Request, background_tasks: BackgroundTasks):
         "skip_download": True,
         "extractor_args": {
             "youtube": {
-                "player_client": ["ios", "android", "web"],
+                "player_client": ["android_embed", "ios", "android", "web", "tv"],
                 "skip": ["webpage"]
             }
         }
     }
+    if cookies_path:
+        ydl_opts_probe["cookiefile"] = cookies_path
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts_probe) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -241,11 +276,13 @@ async def download_video(request: Request, background_tasks: BackgroundTasks):
         "outtmpl": str(base_path),
         "extractor_args": {
             "youtube": {
-                "player_client": ["ios", "android", "web"],
+                "player_client": ["android_embed", "ios", "android", "web", "tv"],
                 "skip": ["webpage"]
             }
         }
     }
+    if cookies_path:
+        ydl_opts_dl["cookiefile"] = cookies_path
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts_dl) as ydl:
